@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minigame: Stars!</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-image: url("https://unblast.com/wp-content/uploads/2021/01/Space-Background-Images.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+  .audio-border {
+    width: fit-content;
+    margin: 0 auto; 
+    display: table;
+    border: 2px dashed #e5a967;
+    border-radius: 999px;
+    padding: 4px;
+  }
+
+  .audio-border audio {
+    display: block;
+    color-scheme: dark;
+  }
+
+    #game-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card {
+      transform: scale(1.0);
+      position: relative;
+      width: 90%;
+      max-width: 440px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border: 2.5px dashed #f4c176;
+      border-radius: 28px;
+      padding: 45px 35px 50px;
+      box-shadow: 0 8px 20px rgba(46, 125, 50, 0.08);
+    }
+
+    .game-header {
+      font-family: inherit;
+      color: #f4c176;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .game-header h2 {
+      font-family: inherit;
+      color: #f4c176;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+    }
+
+    .score-board {
+      font-size: 1.1rem;
+      color: #ffd700;
+      letter-spacing: 1px;
+    }
+
+    canvas {
+      background-color: rgba(10, 10, 25, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: block;
+      margin: 20px auto;
+      border-radius: 20px;
+      box-shadow: 0 0 25px rgba(124, 77, 255, 0.15);
+      cursor: none;
+      touch-action: none;
+    }
+
+    .card-trail {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      font-size: 50px;
+      font-family: serif;
+      z-index: 9999;
+      animation: fallAndFade 1s linear forwards;
+    }
+
+    .card-burst {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      font-size: 65px;
+      font-family: serif;
+      z-index: 9999;
+      animation: burstAndFade 0.6s ease-out forwards;
+    }
+
+    @keyframes fallAndFade {
+      0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--drift, 0px), 100px) scale(0.5) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes burstAndFade {
+      0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--tx), var(--ty)) scale(0.3) rotate(var(--rot));
+        opacity: 0;
+      }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .btn {
+      display: inline-block;
+      width: auto;
+      min-width: 200px;
+      padding: 14px 32px;
+      background-color: rgba(0, 0, 0, 0.55);
+      color: #f4c176;
+      font-family: gabriola;
+      font-size: 150%;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 6px 14px rgba(85, 139, 47, 0.22);
+      transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:hover {
+      background-color: #f4c176;
+      color: #fdfbf7;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(85, 139, 47, 0.3);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .realm-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 15px rgba(248, 201, 103, 0.3);
+    }
+
+    #loading-screen {
+      --theme-color: #f4c176;
+      border-color: var(--theme-color);
+    }
+
+    .star-cluster {
+      position: relative;
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 25px auto;
+      animation: orbit 3.5s linear infinite;
+    }
+
+    .star {
+      position: absolute;
+      color: var(--theme-color);
+      text-shadow: 0 0 12px var(--theme-color);
+      user-select: none;
+    }
+
+    .s1 {
+      top: 0;
+      left: 22px;
+      font-size: 1.8rem;
+      animation: tumble-cw 1.8s ease-in-out infinite;
+    }
+
+    .s2 {
+      bottom: 5px;
+      left: 5px;
+      font-size: 1.4rem;
+      animation: tumble-ccw 2.2s ease-in-out infinite;
+    }
+
+    .s3 {
+      bottom: 8px;
+      right: 5px;
+      font-size: 1.6rem;
+      animation: tumble-cw 1.5s ease-in-out infinite reverse;
+    }
+
+    .s4 {
+      top: 25px;
+      left: 28px;
+      font-size: 1.2rem;
+      color: #fff3d1;
+      animation: tumble-ccw 1.2s linear infinite;
+    }
+
+    @keyframes orbit {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes tumble-cw {
+      0%, 100% { transform: rotate(0deg) scale(0.8); }
+      50% { transform: rotate(180deg) scale(1.25); }
+    }
+
+    @keyframes tumble-ccw {
+      0%, 100% { transform: rotate(360deg) scale(1.15); }
+      50% { transform: rotate(180deg) scale(0.75); }
+    }
+
+    .loading-text {
+      color: var(--theme-color);
+      font-size: 150%;
+      line-height: 1.3;
+      margin-bottom: 18px;
+      text-align: center;
+      font-family: gabriola;
+      font-weight: normal;
+      letter-spacing: 1px;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Wrapped game elements so they hide together when loading starts -->
+  <div id="game-screen">
+    <div class="game-header">
+      <h2>✦ Catch the Falling Stars ✦</h2>
+      <div class="score-board">Stars Collected: <span id="score">0</span></div>
+    </div>
+
+
+    <div class="audio-border">
+      <audio controls autoplay loop style="display: block;">
+        <source src="bg-audio.mp3" type="audio/mpeg">
+      </audio>
+    </div>
+
+    <canvas id="starGame" width="360" height="450"></canvas>
+
+    <button class="realm-btn btn portal-btn" 
+            data-message="The stars had fun with you today. They'll wait for your return." 
+            data-color="#f4c176" 
+            data-url="home.html">
+      Go back
+    </button>
+  </div>
+
+  <div id="loading-screen" class="card hidden">
+    <div id="star-cluster" class="star-cluster">
+      <span class="star s1">✦</span>
+      <span class="star s2">✧</span>
+      <span class="star s3">✦</span>
+      <span class="star s4">⋆</span>
+    </div>
+    <p id="loading-text" class="loading-text"></p>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('starGame');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+
+    let score = 0;
+    let gameRunning = true;
+
+    // Player's Star Bag
+    const bag = {
+      x: canvas.width / 2 - 25,
+      y: canvas.height - 55,
+      width: 50,
+      height: 40
+    };
+
+    // Load custom bag image
+    const bagImg = new Image();
+    bagImg.src = 'bag.png';
+
+    // Falling objects array
+    let items = [];
+
+    // Star types matching your site's symbols
+    const itemTypes = [
+      { symbol: '⋆', points: 1, color: 'yellow', speed: 2.5, size: 30 },
+      { symbol: '✧', points: 3, color: 'white', speed: 3.5, size: 25 },
+      { symbol: '✦', points: 5, color: 'yellow', speed: 4.5, size: 25 },
+      { symbol: '🌑', points: -3, color: 'red', speed: 3.2, size: 25 }
+    ];
+
+    // Move bag with mouse
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      bag.x = Math.max(0, Math.min(canvas.width - bag.width, mouseX - bag.width / 2));
+    });
+
+    // Move bag with touch (mobile)
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const touchX = e.touches[0].clientX - rect.left;
+      bag.x = Math.max(0, Math.min(canvas.width - bag.width, touchX - bag.width / 2));
+    }, { passive: false });
+
+    // Spawn a new falling star or rock
+    function spawnItem() {
+      const type = itemTypes[Math.floor(Math.random() * itemTypes.length)];
+      items.push({
+        x: Math.random() * (canvas.width - 30) + 15,
+        y: -20,
+        ...type
+      });
+    }
+
+    function drawBag() {
+      ctx.save();
+      ctx.shadowColor = 'white';
+      ctx.shadowBlur = 12;
+
+      if (bagImg.complete && bagImg.naturalWidth > 0) {
+        ctx.drawImage(bagImg, bag.x, bag.y, bag.width, bag.height);
+      } else {
+        ctx.font = '38px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('👝', bag.x + bag.width / 2, bag.y + bag.height / 2);
+      }
+      ctx.restore();
+    }
+
+    function updateAndDrawItems() {
+      for (let i = items.length - 1; i >= 0; i--) {
+        const item = items[i];
+        item.y += item.speed;
+
+        // Draw falling star/moon
+        ctx.save();
+        ctx.font = `${item.size}px serif`;
+        ctx.fillStyle = item.color;
+        ctx.shadowColor = item.color;
+        ctx.shadowBlur = 8;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(item.symbol, item.x, item.y);
+        ctx.restore();
+
+        // Check collision with bag
+        if (
+          item.x > bag.x &&
+          item.x < bag.x + bag.width &&
+          item.y > bag.y &&
+          item.y < bag.y + bag.height
+        ) {
+          score = Math.max(0, score + item.points);
+          scoreEl.innerText = score;
+          items.splice(i, 1);
+          continue;
+        }
+
+        // Remove if off-screen
+        if (item.y > canvas.height + 30) {
+          items.splice(i, 1);
+        }
+      }
+    }
+
+    let spawnTimer = 0;
+    function gameLoop() {
+      if (!gameRunning) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      spawnTimer++;
+      if (spawnTimer % 45 === 0) {
+        spawnItem();
+      }
+
+      drawBag();
+      updateAndDrawItems();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+
+    // Mouse trail & click burst effects
+    const suits = ['⚝', '☆', '★', '⯎', '⯏'];
+    const colors = ['#f4c176', '#f4c176', '#f4c176', '#f4c176', '#f4c176'];
+    let lastMove = 0;
+
+    document.addEventListener('mousemove', function(e) {
+      const now = Date.now();
+
+      if (now - lastMove < 30) return;
+      lastMove = now;
+
+      const element = document.createElement('div');
+      element.className = 'card-trail';
+      
+      const randomIndex = Math.floor(Math.random() * suits.length);
+      element.innerText = suits[randomIndex];
+      element.style.color = colors[randomIndex];
+
+      element.style.left = (e.clientX - 10) + 'px';
+      element.style.top = (e.clientY - 10) + 'px';
+
+      const randomXDrift = (Math.random() - 0.5) * 40;
+      element.style.setProperty('--drift', randomXDrift + 'px');
+
+      document.body.appendChild(element);
+
+      setTimeout(() => {
+        element.remove();
+      }, 1000);
+    });
+
+    // Click particle burst effect
+    document.addEventListener('click', function(e) {
+      const particleCount = 8;
+      const radius = 80;
+
+      for (let i = 0; i < particleCount; i++) {
+        const angle = (i / particleCount) * 2 * Math.PI;
+        const targetX = Math.cos(angle) * radius;
+        const targetY = Math.sin(angle) * radius;
+        const randomRotation = Math.floor(Math.random() * 360) + 'deg';
+
+        const element = document.createElement('div');
+        element.className = 'card-burst';
+
+        const randomIndex = Math.floor(Math.random() * suits.length);
+        element.innerText = suits[randomIndex];
+        element.style.color = colors[randomIndex];
+
+        element.style.left = (e.clientX - 20) + 'px';
+        element.style.top = (e.clientY - 20) + 'px';
+        element.style.setProperty('--tx', targetX + 'px');
+        element.style.setProperty('--ty', targetY + 'px');
+        element.style.setProperty('--rot', randomRotation);
+
+        document.body.appendChild(element);
+
+        setTimeout(() => {
+          element.remove();
+        }, 600);
+      }
+    });
+
+    // "Go back" portal button
+    const gameScreen = document.getElementById('game-screen');
+    const loadingScreen = document.getElementById('loading-screen');
+    const loadingText = document.getElementById('loading-text');
+    const portalButtons = document.querySelectorAll('.portal-btn');
+
+    portalButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        gameRunning = false;
+        const message = this.getAttribute('data-message');
+        const themeColor = this.getAttribute('data-color');
+        const targetUrl = this.getAttribute('data-url');
+
+        loadingScreen.style.setProperty('--theme-color', themeColor);
+        loadingText.innerText = message;
+
+        gameScreen.classList.add('hidden');
+        loadingScreen.classList.remove('hidden');
+
+        setTimeout(() => {
+          window.location.href = targetUrl;
+        }, 2500);
+      });
+    });
+  </script>
+</body>
+</html>
+

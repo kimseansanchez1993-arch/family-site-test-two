@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reina/Ronin's Domain</title>
+
+<style>
+
+body {
+      background-image: url("https://unblast.com/wp-content/uploads/2021/01/Space-Background-Images.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+ * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+  .card {
+      transform: scale(1.5);
+      position: relative;
+      width: 90%;
+      max-width: 440px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border: 2.5px dashed #f4c176;
+      border-radius: 28px;
+      padding: 45px 35px 50px;
+      box-shadow: 0 8px 20px rgba(46, 125, 50, 0.08);
+    }
+
+    .prompt-title {
+      color: #f4c176;
+      font-size: 350%;
+      font-weight: bold;
+      line-height: 1.3;
+      margin-bottom: 18px;
+      text-align: center;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 18px 24px;
+      background-color: rgba(0, 0, 0, 0.55);
+      color: #f4c176;
+      font-family: inherit;
+      font-size: 200%;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 6px 14px rgba(85, 139, 47, 0.22);
+      transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:hover {
+      background-color: #f4c176;
+      color: #fdfbf7;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(85, 139, 47, 0.3);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+  .card-trail {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    font-size: 50px;
+    font-family: serif;
+    z-index: 9999;
+    animation: fallAndFade 1s linear forwards;
+  }
+
+  .card-burst {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    font-size: 65px;
+    font-family: serif;
+    z-index: 9999;
+    animation: burstAndFade 0.6s ease-out forwards;
+  }
+
+  @keyframes fallAndFade {
+    0% {
+      transform: translateY(0) scale(1) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100px) scale(0.5) rotate(360deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes burstAndFade {
+    0% {
+      transform: translate(0, 0) scale(1) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--tx), var(--ty)) scale(0.3) rotate(var(--rot));
+      opacity: 0;
+    }
+  }
+
+</style>
+</head>
+<body>
+
+  <div class="card">
+   
+    <h1 class="prompt-title">Coming Soon!</h1>
+   
+    <p style="color: rgba(0, 0, 0, 0); font-size: 50%">Hello?</p>
+
+    <div class="button-group">
+      <a href="home.html" class="btn">Go Back</a>
+    </div>
+  </div>
+
+<script>
+
+const suits = ['⚝', '☆', '★', '⯎','⯏'];
+const colors = ['#f4c176', '#f4c176', '#f4c176', '#f4c176', '#f4c176'];
+let lastMove = 0;
+
+document.addEventListener('mousemove', function(e) {
+  const now = Date.now();
+  if (now - lastMove < 30) return;
+  lastMove = now;
+
+  const element = document.createElement('div');
+  element.className = 'card-trail';
+  
+  const randomIndex = Math.floor(Math.random() * suits.length);
+  element.innerText = suits[randomIndex];
+  element.style.color = colors[randomIndex];
+
+  element.style.left = (e.clientX - 10) + 'px';
+  element.style.top = (e.clientY - 10) + 'px';
+
+  const randomXDrift = (Math.random() - 0.5) * 40;
+  element.style.setProperty('--drift', randomXDrift + 'px');
+
+  document.body.appendChild(element);
+
+  setTimeout(() => {
+    element.remove();
+  }, 1000);
+});
+
+document.addEventListener('click', function(e) {
+  const particleCount = 8;
+  const radius = 80;
+
+  for (let i = 0; i < particleCount; i++) {
+    const angle = (i / particleCount) * 2 * Math.PI;
+    const targetX = Math.cos(angle) * radius;
+    const targetY = Math.sin(angle) * radius;
+    const randomRotation = Math.floor(Math.random() * 360) + 'deg';
+
+    const element = document.createElement('div');
+    element.className = 'card-burst';
+
+    const randomIndex = Math.floor(Math.random() * suits.length);
+    element.innerText = suits[randomIndex];
+    element.style.color = colors[randomIndex];
+
+    element.style.left = (e.clientX - 12) + 'px';
+    element.style.top = (e.clientY - 12) + 'px';
+
+    element.style.setProperty('--tx', targetX + 'px');
+    element.style.setProperty('--ty', targetY + 'px');
+    element.style.setProperty('--rot', randomRotation);
+
+    document.body.appendChild(element);
+
+    setTimeout(() => {
+      element.remove();
+    }, 600);
+  }
+});
+</script>
+
+</body>
+</html>
